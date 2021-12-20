@@ -1,3 +1,6 @@
+from torch import nn
+from collections import namedtuple
+
 class ResNet(nn.Module):
     def __init__(self, config, output_dim):
         super().__init__()

@@ -4,6 +4,7 @@ from torchtext.vocab import build_vocab_from_iterator
 import torch
 from torch.utils.data import dataset
 from torch import nn, Tensor
+from typing import Tuple
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

@@ -66,7 +66,7 @@ class TransformerModel(nn.Module):
         self.model_type = 'Transformer'
         self.pos_encoder = PositionalEncoding(d_model, dropout)
         self.N = nlayers
-        self.transformer_encoder = get_clones(Step(TransformerEncoderLayer(d_model, nhead, d_hid, dropout), self.N))
+        self.transformer_encoder = get_clones(Step(TransformerEncoderLayer(d_model, nhead, d_hid, dropout)), self.N)
         self.encoder = nn.Embedding(ntoken, d_model)
         self.d_model = d_model
         self.decoder = nn.Linear(d_model, ntoken)

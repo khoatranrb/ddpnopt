@@ -78,7 +78,7 @@ class TransformerModel(nn.Module):
         self.decoder.bias.data.zero_()
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, src: Tensor, src_mask: Tensor) -> Tensor:
+    def forward(self, src: Tensor, src_mask: Tensor, update=False, opt=None) -> Tensor:
         """
         Args:
             src: Tensor, shape [seq_len, batch_size]
@@ -89,7 +89,7 @@ class TransformerModel(nn.Module):
         src = self.encoder(src) * math.sqrt(self.d_model)
         src = self.pos_encoder(src)
         for i in range(self.N):
-            src = self.transformer_encoder[i](src, src_mask)
+            src = self.transformer_encoder[i](src, src_mask, update, opt)
         output = self.decoder(src)
         return output
 

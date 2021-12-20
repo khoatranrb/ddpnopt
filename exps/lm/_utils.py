@@ -4,7 +4,7 @@ import torch
 import math
 
 
-def train(model, train_data, bptt, criterion, ntokens, device):
+def train(model, train_data, optimizer, bptt, criterion, ntokens, device):
     model.train()  # turn on train mode
     total_loss = 0.
     log_interval = 300
@@ -36,7 +36,7 @@ def train(model, train_data, bptt, criterion, ntokens, device):
             total_loss = 0
             start_time = time.time()
             
-def train_ddp(model, train_data, bptt, criterion, ntokens, device):
+def train_ddp(model, train_data, optimizer, bptt, criterion, ntokens, device):
     model.train()  # turn on train mode
     total_loss = 0.
     log_interval = 300

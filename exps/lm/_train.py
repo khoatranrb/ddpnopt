@@ -3,14 +3,19 @@ import time
 import torch
 import torch.nn as nn
 import math
-from ...
+from _models import TransformerModel
+from _data import get_data, get_batch, generate_square_subsequent_mask
 
+train_data, val_data, test_data, vocab = get_data()
+
+device = 'cuda'
 ntokens = len(vocab)  # size of vocabulary
 emsize = 100  # embedding dimension
 d_hid = 100  # dimension of the feedforward network model in nn.TransformerEncoder
 nlayers = 10  # number of nn.TransformerEncoderLayer in nn.TransformerEncoder
 nhead = 2  # number of heads in nn.MultiheadAttention
 dropout = 0.2  # dropout probability
+bptt = 35
 model = TransformerModel(ntokens, emsize, nhead, d_hid, nlayers, dropout).to(device)
 
 criterion = nn.CrossEntropyLoss()
@@ -66,7 +71,7 @@ def evaluate(model, eval_data, bptt, criterion, ntokens, device):
     return total_loss / (len(eval_data) - 1)
     
 best_val_loss = float('inf')
-epochs = 200
+epochs = 120
 
 for epoch in range(1, epochs + 1):
     epoch_start_time = time.time()

@@ -5,7 +5,7 @@ import torch.nn as nn
 import math
 from _models import TransformerModel
 from _data import get_data
-from utils import train, evaluate
+from _utils import train, evaluate
 
 train_data, val_data, test_data, vocab = get_data()
 

@@ -9,7 +9,7 @@ tokenizer = get_tokenizer('basic_english')
 vocab = build_vocab_from_iterator(map(tokenizer, train_iter), specials=['<unk>'])
 vocab.set_default_index(vocab['<unk>'])
 
-def data_process(raw_text_iter: dataset.IterableDataset) -> Tensor:
+def data_process(raw_text_iter: dataset.IterableDataset, vocab=vocab) -> Tensor:
     """Converts raw text into a flat Tensor."""
     data = [torch.tensor(vocab(tokenizer(item)), dtype=torch.long) for item in raw_text_iter]
     return torch.cat(tuple(filter(lambda t: t.numel() > 0, data)))
@@ -30,7 +30,7 @@ def batchify(data: Tensor, bsz: int) -> Tensor:
     data = data.view(bsz, seq_len).t().contiguous()
     return data.to(device)
   
-def get_data(bs=32):
+def get_data(bs=32, vocab=vocab):
     train_iter, val_iter, test_iter = WikiText2()
     train_data = data_process(train_iter)
     val_data = data_process(val_iter)
@@ -39,6 +39,7 @@ def get_data(bs=32):
     train_data = batchify(train_data, bs)  # shape [seq_len, batch_size]
     val_data = batchify(val_data, bs)
     test_data = batchify(test_data, bs)
+    return train_data, val_data, test_data, vocab
     
 def generate_square_subsequent_mask(sz: int) -> Tensor:
     """Generates an upper-triangular matrix of -inf, with zeros on diag."""

@@ -31,9 +31,8 @@ class Step(nn.Module):
     def update(self, inp, mask, opt):
         for p in self.mod.parameters():
             Q_u = p.grad
-            Q_uu = opt.state[p]['square_avg']
+            Q_uu = opt.state[p]['hess']
             break
-        Q_uu = opt.state[self.mod.weight]['hess']
         Q_x = self.x.grad.mean(dim=0).mean(dim=0)
         Q_ux = calc_q_ux_fc(Q_u, Q_x.unsqueeze(-1))
         big_k = calc_big_k_fc(Q_uu, Q_ux)

@@ -27,6 +27,7 @@ best_val_loss = float('inf')
 epochs = 120
 
 for epoch in range(1, epochs + 1):
+    print('Epoch:', epoch)
     epoch_start_time = time.time()
     train(model, train_data, optimizer, bptt, criterion, ntokens, device)
     val_loss = evaluate(model, val_data, bptt, criterion, ntokens, device)

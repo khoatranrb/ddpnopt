@@ -44,4 +44,4 @@ def get_data(BATCH_SIZE=24):
 
     valid_iterator = data.DataLoader(test_data, 
                                      batch_size = BATCH_SIZE)
-    return train_iterator, valid_iterator
+    return train_iterator, valid_iterator, len(test_data.classes)

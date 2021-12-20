@@ -30,7 +30,7 @@ epochs = 120
 
 for epoch in range(1, epochs + 1):
     epoch_start_time = time.time()
-    train_ddp(model, train_data, bptt, criterion, ntokens, device)
+    train_ddp(model, train_data, optimizer, bptt, criterion, ntokens, device)
     val_loss = evaluate(model, val_data, bptt, criterion, ntokens, device)
     val_ppl = math.exp(val_loss)
     elapsed = time.time() - epoch_start_time

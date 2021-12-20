@@ -14,7 +14,6 @@ class Step(nn.Module):
         self.x = None
         self.x_old = None
         self.mod = module
-        self.type = _layer_type(module)
     def __str__(self):
         return 'DDP'
     def forward(self, inp=None, mask=None, update=False, opt=None):

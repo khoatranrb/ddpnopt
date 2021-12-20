@@ -28,8 +28,8 @@ epochs = 120
 
 for epoch in range(1, epochs + 1):
     epoch_start_time = time.time()
-    train(model)
-    val_loss = evaluate(model, val_data)
+    train(model, train_data, bptt, criterion, ntokens, device)
+    val_loss = evaluate(model, val_data, bptt, criterion, ntokens, device)
     val_ppl = math.exp(val_loss)
     elapsed = time.time() - epoch_start_time
     print('-' * 89)

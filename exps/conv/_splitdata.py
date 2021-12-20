@@ -2,6 +2,7 @@ import os
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torch.utils.data as data
+import shutil
 
 ROOT = 'data'
 TRAIN_RATIO = 1

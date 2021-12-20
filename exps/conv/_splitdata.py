@@ -5,7 +5,7 @@ import torch.utils.data as data
 import shutil
 
 ROOT = 'data'
-TRAIN_RATIO = 1
+TRAIN_RATIO = 0.8
 
 data_dir = os.path.join(ROOT, 'CUB_200_2011')
 images_dir = os.path.join(data_dir, 'images')

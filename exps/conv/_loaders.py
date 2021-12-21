@@ -3,9 +3,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torch.utils.data as data
 
-def get_data(BATCH_SIZE=24):
-    ROOT = 'data'
-
+def get_data(ROOT = 'data', BATCH_SIZE=24):
     data_dir = os.path.join(ROOT, 'CUB_200_2011')
     train_dir = os.path.join(data_dir, 'train')
     test_dir = os.path.join(data_dir, 'test')

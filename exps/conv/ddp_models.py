@@ -141,7 +141,7 @@ class ResNet(nn.Module):
         
         return x
       
-  class Bottleneck(nn.Module):
+class Bottleneck(nn.Module):
     
     expansion = 4
     

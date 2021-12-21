@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch
 from torch.optim.optimizer import Optimizer
 from torch import Tensor
+import math
 
 class DDPNOPT(Optimizer):
     def __init__(self, model, lr=1e-2, lrddp = 1e-2, alpha=0.99, eps=1e-8, weight_decay=0, momentum=0, centered=False):

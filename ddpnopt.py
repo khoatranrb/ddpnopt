@@ -44,6 +44,8 @@ class Step(nn.Module):
             term2 = calc_term2_conv(big_k, inp - self.x_old).reshape(self.mod.weight.shape)
         self.mod.weight += opt.lr*opt.lrddp*(term2)
         out = self.forward_wo_train(inp)
+        del self.x
+        del self.x_old
         return out
 
 

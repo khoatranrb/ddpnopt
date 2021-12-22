@@ -47,7 +47,7 @@ class Step(nn.Module):
         out = self.forward_wo_train(inp)
         del self.x
         del self.x_old
-        opt.state[self.mod.weight]['hess']
+        del opt.state[self.mod.weight]['hess']
         return out
 
 

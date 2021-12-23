@@ -46,6 +46,7 @@ class Step(nn.Module):
         out = self.forward_wo_train(inp)
         del self.x
         del self.x_old
+        del opt.state[self.mod.weight]['hess']
         return out
 
 
@@ -54,9 +55,6 @@ def calc_q_ux_fc(q_u, q_x):
 
 def calc_q_ux_conv(W, q_u):
     return torch.einsum('cdef,cdef->cdef',W,q_u)
-
-def calc_small_k(q_uu, q_u):
-    return -q_u/q_uu
 
 def calc_big_k_conv(q_uu, q_ux):
     return -q_ux/q_uu

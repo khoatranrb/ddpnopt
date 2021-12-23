@@ -3,7 +3,9 @@ import time
 import torch
 import torch.nn as nn
 import math
-from ddp_opt import DDPNOPT
+import sys
+sys.path.append('../..')
+from ddpnopt import DDPNOPT, AdamDDP
 from ddp_models import TransformerModel
 from _data import get_data
 from _utils import train_ddp, evaluate

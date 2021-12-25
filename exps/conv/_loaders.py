@@ -3,7 +3,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torch.utils.data as data
 
-def get_data(ROOT = 'data', BATCH_SIZE=24):
+def get_data(ROOT = 'data', BATCH_SIZE=24, shuffle_train=None):
     data_dir = os.path.join(ROOT, 'CUB_200_2011')
     train_dir = os.path.join(data_dir, 'train')
     test_dir = os.path.join(data_dir, 'test')
@@ -37,7 +37,7 @@ def get_data(ROOT = 'data', BATCH_SIZE=24):
                                      transform = test_transforms)
 
     train_iterator = data.DataLoader(train_data, 
-                                     shuffle = True, 
+                                     shuffle = shuffle_train, 
                                      batch_size = BATCH_SIZE)
 
     valid_iterator = data.DataLoader(test_data, 

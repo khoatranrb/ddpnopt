@@ -37,7 +37,7 @@ def get_data(ROOT = 'data', BATCH_SIZE=24):
                                      transform = test_transforms)
 
     train_iterator = data.DataLoader(train_data, 
-                                     shuffle = True, 
+#                                      shuffle = True, 
                                      batch_size = BATCH_SIZE)
 
     valid_iterator = data.DataLoader(test_data, 

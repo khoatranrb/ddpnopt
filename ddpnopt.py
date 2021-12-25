@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch
 from torch.optim.optimizer import Optimizer
 from torch import Tensor
+import math
 
 def _layer_type(layer: nn.Module) -> str:
     return layer.__class__.__name__

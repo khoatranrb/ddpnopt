@@ -1,6 +1,6 @@
-from _models import ResNet, get_cfg
+from _models import ResNet
 from _loaders import get_data
-from _utils import calculate_topk_accuracy, train, evaluate, epoch_time
+from _utils import calculate_topk_accuracy, train, evaluate, epoch_time, get_cfg
 from torch import nn, optim
 from tqdm.auto import tqdm
 import time

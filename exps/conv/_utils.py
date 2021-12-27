@@ -1,5 +1,17 @@
 import torch
 from tqdm.auto import tqdm
+from collections import namedtuple
+
+def get_cfg(name):
+    ResNetConfig = namedtuple('ResNetConfig', ['block', 'n_blocks', 'channels'])
+    if name == 'resnet152':
+        return ResNetConfig(block = Bottleneck,
+                                    n_blocks = [3, 8, 36, 3],
+                                    channels = [64, 128, 256, 512])
+    elif name == 'resnet18':
+        return ResNetConfig(block = Bottleneck,
+                                    n_blocks = [2, 2, 2, 2],
+                                    channels = [64, 128, 256, 512])
 
 def calculate_topk_accuracy(y_pred, y, k = 5):
     with torch.no_grad():

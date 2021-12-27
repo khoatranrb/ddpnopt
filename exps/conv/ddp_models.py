@@ -128,9 +128,3 @@ class Bottleneck(nn.Module):
         x = self.relu(x)
     
         return x
-    
-def get_cfg():
-    ResNetConfig = namedtuple('ResNetConfig', ['block', 'n_blocks', 'channels'])
-    return ResNetConfig(block = Bottleneck,
-                                n_blocks = [3, 8, 36, 3],
-                                channels = [64, 128, 256, 512])

@@ -8,12 +8,16 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 from torch.utils.data import dataset
 import copy
 
+def _layer_type(layer: nn.Module) -> str:
+    return layer.__class__.__name__
+
 class Step(nn.Module):
     def __init__(self, module):
         super(Step, self).__init__()
         self.x = None
         self.x_old = None
         self.mod = module
+        self.type = _layer_type(module)
     def __str__(self):
         return 'DDP'
     def forward(self, inp=None, mask=None, update=False, opt=None):
@@ -23,6 +27,8 @@ class Step(nn.Module):
             return (self.mod(self.x, mask)+self.mod(inp, mask))/2
         else:
             return self.update(inp, mask, opt)
+            # try: return self.update(inp, mask, opt)
+            # except: return self.update(self.x, mask, opt)
 
     def forward_wo_train(self, inp, mask):
         return self.mod(inp, mask)
@@ -31,14 +37,17 @@ class Step(nn.Module):
     def update(self, inp, mask, opt):
         for p in self.mod.parameters():
             Q_u = p.grad
-            Q_uu = opt.state[p]['hess']
+            Q_uu = opt.state[p]['square_avg']
             break
+        Q_uu = Q_uu.sqrt().add_(opt.eps)
         Q_x = self.x.grad.mean(dim=0).mean(dim=0)
         Q_ux = calc_q_ux_fc(Q_u, Q_x.unsqueeze(-1))
         big_k = calc_big_k_fc(Q_uu, Q_ux)
         term2 = torch.einsum('xy,zt->xt', big_k, (inp - self.x_old).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
             p.shape)
         for p in self.mod.parameters():
+            # print((inp - self.x_old).mean(), term2.mean(), Q_u.mean())
+            # print(term2.max(), Q_u.max())
             p.add_(opt.lr*opt.lrddp*(term2))
             break
         out = self.forward_wo_train(inp, mask)
@@ -49,9 +58,63 @@ class Step(nn.Module):
 
 def calc_q_ux_fc(q_u, q_x):
     return torch.einsum('xy,zt->xt', q_u.flatten(start_dim=0).unsqueeze(-1), torch.transpose(q_x,0,1))
+
+def calc_q_ux_conv(W, q_u):
+    return torch.einsum('cdef,cdef->cdef',W,q_u)
+
+def calc_small_k(q_uu, q_u):
+    return -q_u/q_uu
+
+def calc_big_k_conv(q_uu, q_ux):
+    return -q_ux/q_uu
         
 def calc_big_k_fc(q_uu, q_ux):
     return -torch.einsum('x,xt->xt', 1/q_uu.flatten(start_dim=0), q_ux)
+
+# class Step(nn.Module):
+#     def __init__(self, module):
+#         super(Step, self).__init__()
+#         self.x = None
+#         self.x_old = None
+#         self.mod = module
+#     def __str__(self):
+#         return 'DDP'
+#     def forward(self, inp=None, mask=None, update=False, opt=None):
+#         if not update:
+#             self.x_old = inp
+#             self.x = nn.Parameter(inp)
+#             return (self.mod(self.x, mask)+self.mod(inp, mask))/2
+#         else:
+#             return self.update(inp, mask, opt)
+
+#     def forward_wo_train(self, inp, mask):
+#         return self.mod(inp, mask)
+
+#     @torch.no_grad()
+#     def update(self, inp, mask, opt):
+#         for p in self.mod.parameters():
+#             Q_u = p.grad
+#             Q_uu = opt.state[p]['hess']
+#             break
+#         Q_x = self.x.grad.mean(dim=0).mean(dim=0)
+#         Q_ux = calc_q_ux_fc(Q_u, Q_x.unsqueeze(-1))
+#         big_k = calc_big_k_fc(Q_uu, Q_ux)
+#         term2 = torch.einsum('xy,zt->xt', big_k, (inp - self.x_old).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
+#             p.shape)
+#         for p in self.mod.parameters():
+#             p.add_(opt.lr*opt.lrddp*(term2))
+#             break
+#         out = self.forward_wo_train(inp, mask)
+#         del self.x
+#         del self.x_old
+#         return out
+
+
+# def calc_q_ux_fc(q_u, q_x):
+#     return torch.einsum('xy,zt->xt', q_u.flatten(start_dim=0).unsqueeze(-1), torch.transpose(q_x,0,1))
+        
+# def calc_big_k_fc(q_uu, q_ux):
+#     return -torch.einsum('x,xt->xt', 1/q_uu.flatten(start_dim=0), q_ux)
 
 def get_clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])

@@ -12,12 +12,15 @@ def _layer_type(layer: nn.Module) -> str:
     return layer.__class__.__name__
 
 class Step(nn.Module):
-    def __init__(self, module):
+    def __init__(self, module, alpha=0.99, eps=1e-8):
         super(Step, self).__init__()
         self.x = None
         self.x_old = None
         self.mod = module
         self.type = _layer_type(module)
+        self.x_hess = 0
+        self.alpha = alpha
+        self.eps = eps
     def __str__(self):
         return 'DDP'
     def forward(self, inp=None, mask=None, update=False, opt=None):
@@ -41,10 +44,21 @@ class Step(nn.Module):
             break
         Q_uu = Q_uu.sqrt().add_(opt.eps)
         Q_x = self.x.grad.mean(dim=0).mean(dim=0)
+        
+        self.x_hess.mul_(self.alpha).addcmul_(Q_x, Q_x, value=1 - self.alpha)
+        Q_xx = self.x_hess.sqrt().add_(self.eps)
+        
         Q_ux = calc_q_ux_fc(Q_u, Q_x.unsqueeze(-1))
         big_k = calc_big_k_fc(Q_uu, Q_ux)
         term2 = torch.einsum('xy,zt->xt', big_k, (inp - self.x_old).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
             p.shape)
+        
+        Q_ux = calc_q_ux_fc(Q_u, Q_xx.unsqueeze(-1))
+        big_k = calc_big_k_fc(Q_uu, Q_ux)
+        
+        term2 += torch.einsum('xy,zt->xt', big_k, (inp - self.x_old)*(inp - self.x_old).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
+            p.shape)
+        
         for p in self.mod.parameters():
             # print((inp - self.x_old).mean(), term2.mean(), Q_u.mean())
             # print(term2.max(), Q_u.max())

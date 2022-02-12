@@ -45,7 +45,7 @@ class Step(nn.Module):
         Q_uu = Q_uu.sqrt().add_(opt.eps)
         Q_x = self.x.grad.mean(dim=0).mean(dim=0)
         
-        self.x_hess.mul_(self.alpha).addcmul_(Q_x, Q_x, value=1 - self.alpha)
+        self.x_hess += self.x_hess * self.alpha + (Q_x * Q_x) * (1 - self.alpha)
         Q_xx = self.x_hess.sqrt().add_(self.eps)
         
         Q_ux = calc_q_ux_fc(Q_u, Q_x.unsqueeze(-1))

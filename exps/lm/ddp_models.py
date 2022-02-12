@@ -56,7 +56,7 @@ class Step(nn.Module):
         Q_ux = calc_q_ux_fc(Q_u, Q_xx.unsqueeze(-1))
         big_k = calc_big_k_fc(Q_uu, Q_ux)
         
-        term2 += torch.einsum('xy,zt->xt', big_k, ((inp - self.x_old)*(inp - self.x_old)).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
+        term2 += torch.einsum('xy,zt->xt', big_k, ((inp - self.x_old)*(inp - self.x_old)*0.01).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
             p.shape)
         
         for p in self.mod.parameters():

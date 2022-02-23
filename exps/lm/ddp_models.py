@@ -41,7 +41,6 @@ class Step(nn.Module):
         if opt.first_time:
             for p in self.mod.parameters():
                 opt.state[p]['feedback'] = True
-                opt.state[p]['square_avg'] = torch.zeros_like(p, memory_format=torch.preserve_format)
                 return self.forward_wo_train(inp, mask)
         for p in self.mod.parameters():
             Q_u = p.grad

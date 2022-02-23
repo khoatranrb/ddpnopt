@@ -37,32 +37,31 @@ class Step(nn.Module):
         return self.mod(inp, mask)
 
     @torch.no_grad()
-    def update(self, inp, mask, opt):
+    def update(self, inp, mask, opt, first_time_opt=False):
+        if first_time_opt:
+            for p in self.mod.parameters():
+                opt.state[p]['feedback'] = True
+                opt.state['square_avg'] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                return self.forward_wo_train(inp, mask)
         for p in self.mod.parameters():
             Q_u = p.grad
-            Q_uu = opt.state[p]['square_avg']
+#             opt.state[p]['square_avg'].mul_(opt.alpha).addcmul_(p.grad, p.grad, value=1 - opt.alpha)
+            Q_uu_raw = opt.state[p]['square_avg'] * opt.alpha + (Q_u * Q_u) * (1- opr.alpha)
+#             Q_uu = opt.state[p]['square_avg'].sqrt().add_(self.eps)
+            Q_uu = Q_uu_raw.sqrt().add_(self.eps)
             break
-        Q_uu = Q_uu.sqrt().add_(opt.eps)
         Q_x = self.x.grad.mean(dim=0).mean(dim=0)
-        
-        self.x_hess += self.x_hess * self.alpha + (Q_x * Q_x) * (1 - self.alpha)
-        Q_xx = self.x_hess.sqrt().add_(self.eps)
         
         Q_ux = calc_q_ux_fc(Q_u, Q_x.unsqueeze(-1))
         big_k = calc_big_k_fc(Q_uu, Q_ux)
         term2 = torch.einsum('xy,zt->xt', big_k, (inp - self.x_old).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
             p.shape)
-        
-        Q_ux = calc_q_ux_fc(Q_u, Q_xx.unsqueeze(-1))
-        big_k = calc_big_k_fc(Q_uu, Q_ux)
-        
-        term2 += torch.einsum('xy,zt->xt', big_k, ((inp - self.x_old)*(inp - self.x_old)*0.01).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
-            p.shape)
+        Q_u += opt.lrddp*(term2 * Q_uu)
         
         for p in self.mod.parameters():
-            # print((inp - self.x_old).mean(), term2.mean(), Q_u.mean())
-            # print(term2.max(), Q_u.max())
-            p.add_(opt.lr*opt.lrddp*(term2))
+            opt.state[p]['square_avg'].mul_(opt.alpha).addcmul_(Q_u, Q_u, value=1 - opt.alpha)
+            Q_uu = opt.state[p]['square_avg'].sqrt().add_(self.eps)
+            p.addcdiv_(Q_u, Q_uu, value=-self.lr)
             break
         out = self.forward_wo_train(inp, mask)
         del self.x
@@ -154,7 +153,7 @@ class TransformerModel(nn.Module):
         self.decoder.bias.data.zero_()
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, src: Tensor, src_mask: Tensor, update=False, opt=None) -> Tensor:
+    def forward(self, src: Tensor, src_mask: Tensor, update=False, opt=None, first_time_opt=False) -> Tensor:
         """
         Args:
             src: Tensor, shape [seq_len, batch_size]
@@ -165,7 +164,7 @@ class TransformerModel(nn.Module):
         src = self.encoder(src) * math.sqrt(self.d_model)
         src = self.pos_encoder(src)
         for i in range(self.N):
-            src = self.transformer_encoder[i](src, src_mask, update, opt)
+            src = self.transformer_encoder[i](src, src_mask, update, opt, first_time_opt)
         output = self.decoder(src)
         return output
 

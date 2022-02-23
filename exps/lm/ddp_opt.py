@@ -4,7 +4,7 @@ from torch import Tensor
 from typing import List, Optional
 
                         
-class DDPNOPT(Optimizer):
+class RMS_DDP(Optimizer):
     def __init__(self, model, lr=1e-2, lrddp = 1e-2, alpha=0.99, eps=1e-8, weight_decay=0, momentum=0, centered=False):
         self.lr = lr
         self.lrddp = lrddp
@@ -26,20 +26,18 @@ class DDPNOPT(Optimizer):
     @torch.no_grad()
     def step(self, src, mask):
         if self.first_time:
-            self.model(src, mask, update=True, opt=self, self.first_time)
+            self.model(src, mask, update=True, opt=self)
             self.first_time = False
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None or self.state[p]['feedback']:
                     continue
                 state = self.state[p]
-                if len(state) == 0:
+                if len(state) < 2:
                     state['square_avg'] = torch.zeros_like(p, memory_format=torch.preserve_format)
                 state['square_avg'].mul_(self.alpha).addcmul_(p.grad, p.grad, value=1 - self.alpha)
                 avg = state['square_avg'].sqrt().add_(self.eps)
-#                 state['hess'] = avg
                 p.addcdiv_(p.grad, avg, value=-self.lr)
-#         self.update()
         if self.lrddp: self.model(src, mask, update=True, opt=self)
 
     def update(self):
@@ -50,5 +48,4 @@ class DDPNOPT(Optimizer):
                 state = self.state[p]
                 state['square_avg'].mul_(self.alpha).addcmul_(p.grad, p.grad, value=1 - self.alpha)
                 avg = state['square_avg'].sqrt().add_(self.eps)
-                state['hess'] = avg
                 p.addcdiv_(p.grad, avg, value=-self.lr)

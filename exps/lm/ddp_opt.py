@@ -28,6 +28,7 @@ class RMS_DDP(Optimizer):
         if self.first_time:
             self.model(src, mask, update=True, opt=self)
             self.first_time = False
+        list_params, list_grad = [], []
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None or self.state[p]['feedback']:
@@ -35,17 +36,23 @@ class RMS_DDP(Optimizer):
                 state = self.state[p]
                 if len(state) < 2:
                     state['square_avg'] = torch.zeros_like(p, memory_format=torch.preserve_format)
-                state['square_avg'].mul_(self.alpha).addcmul_(p.grad, p.grad, value=1 - self.alpha)
-                avg = state['square_avg'].sqrt().add_(self.eps)
-                p.addcdiv_(p.grad, avg, value=-self.lr)
+                list_params.append(p)
+                list_grad.append(p.grad)
+        self.update(list_params, list_grad)
         if self.lrddp: self.model(src, mask, update=True, opt=self)
 
-    def update(self):
-        for group in self.param_groups:
-            for p in group['params']:
-                if p.grad is None:
-                    continue
-                state = self.state[p]
-                state['square_avg'].mul_(self.alpha).addcmul_(p.grad, p.grad, value=1 - self.alpha)
-                avg = state['square_avg'].sqrt().add_(self.eps)
-                p.addcdiv_(p.grad, avg, value=-self.lr)
+    def update(self, list_params, list_grad):
+        for p, grad in zip(list_params, list_grad):
+            state = self.state[p]
+            state['square_avg'].mul_(self.alpha).addcmul_(grad, grad, value=1 - self.alpha)
+            avg = state['square_avg'].sqrt().add_(self.eps)
+            p.addcdiv_(grad, avg, value=-self.lr)
+
+#         for group in self.param_groups:
+#             for p in group['params']:
+#                 if p.grad is None:
+#                     continue
+#                 state = self.state[p]
+#                 state['square_avg'].mul_(self.alpha).addcmul_(p.grad, p.grad, value=1 - self.alpha)
+#                 avg = state['square_avg'].sqrt().add_(self.eps)
+#                 p.addcdiv_(p.grad, avg, value=-self.lr)

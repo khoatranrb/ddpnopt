@@ -57,9 +57,7 @@ class Step(nn.Module):
         Q_u -= opt.lrddp*(term2 * Q_uu)
         
         for p in self.mod.parameters():
-            opt.state[p]['square_avg'].mul_(opt.alpha).addcmul_(Q_u, Q_u, value=1 - opt.alpha)
-            Q_uu = opt.state[p]['square_avg'].sqrt().add_(opt.eps)
-            p.addcdiv_(Q_u, Q_uu, value=-opt.lr)
+            opt.update([p], [Q_u])
             break
         out = self.forward_wo_train(inp, mask)
         del self.x

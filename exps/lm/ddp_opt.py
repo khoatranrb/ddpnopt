@@ -13,12 +13,12 @@ class RMS_DDP(Optimizer):
         self.alpha = alpha
         self.first_time = True
         defaults = dict(lr=lr, momentum=momentum, alpha=alpha, eps=eps, centered=centered, weight_decay=weight_decay)
-        super(DDPNOPT, self).__init__(model.parameters(), defaults)
+        super(RMS_DDP, self).__init__(model.parameters(), defaults)
         for p in self.model.parameters():
             self.state[p]['feedback'] = False
 
     def __setstate__(self, state):
-        super(DDPNOPT, self).__setstate__(state)
+        super(RMS_DDP, self).__setstate__(state)
         for group in self.param_groups:
             group.setdefault('momentum', 0)
             group.setdefault('centered', False)
@@ -47,12 +47,3 @@ class RMS_DDP(Optimizer):
             state['square_avg'].mul_(self.alpha).addcmul_(grad, grad, value=1 - self.alpha)
             avg = state['square_avg'].sqrt().add_(self.eps)
             p.addcdiv_(grad, avg, value=-self.lr)
-
-#         for group in self.param_groups:
-#             for p in group['params']:
-#                 if p.grad is None:
-#                     continue
-#                 state = self.state[p]
-#                 state['square_avg'].mul_(self.alpha).addcmul_(p.grad, p.grad, value=1 - self.alpha)
-#                 avg = state['square_avg'].sqrt().add_(self.eps)
-#                 p.addcdiv_(p.grad, avg, value=-self.lr)

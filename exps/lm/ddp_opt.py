@@ -2,6 +2,7 @@ import torch
 from torch.optim.optimizer import Optimizer
 from torch import Tensor
 from typing import List, Optional
+import math
 
                         
 class RmsDDP(Optimizer):

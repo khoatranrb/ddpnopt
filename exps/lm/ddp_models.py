@@ -44,13 +44,13 @@ class Step(nn.Module):
                 return self.forward_wo_train(inp, mask)
         for p in self.mod.parameters():
             Q_u = p.grad
-            Q_uu_raw = opt.state[p]['square_avg'] * opt.alpha + (Q_u * Q_u) * (1- opt.alpha)
-            Q_uu = Q_uu_raw.sqrt().add_(self.eps)
+            Q_uu = opt.get_hess(p)
             break
         Q_x = self.x.grad.mean(dim=0).mean(dim=0)
         
         Q_ux = calc_q_ux_fc(Q_u, Q_x.unsqueeze(-1))
-        big_k = calc_big_k_fc(Q_uu, Q_ux)
+#         big_k = calc_big_k_fc(Q_uu, Q_ux)
+        big_k = -Q_ux
         term2 = torch.einsum('xy,zt->xt', big_k, (inp - self.x_old).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
             p.shape)
         Q_u -= opt.lrddp*(term2 * Q_uu)

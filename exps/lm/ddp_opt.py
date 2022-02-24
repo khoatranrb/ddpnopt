@@ -26,7 +26,7 @@ class RmsDDP(Optimizer):
 
     @torch.no_grad()
     def step(self, src, mask):
-        if self.first_time and self.lrddp != 0::
+        if self.first_time and self.lrddp != 0:
             self.model(src, mask, update=True, opt=self)
             self.first_time = False
         list_params, list_grad = [], []

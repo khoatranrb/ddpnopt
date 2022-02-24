@@ -45,12 +45,6 @@ class RmsDDP(Optimizer):
             state['square_avg'].mul_(self.alpha).addcmul_(grad, grad, value=1 - self.alpha)
             avg = state['square_avg'].sqrt().add_(self.eps)
             p.addcdiv_(grad, avg, value=-self.lr)
-    
-    def get_hess(self, p):
-        Q_u = p.grad
-        Q_uu_raw = self.state[p]['square_avg'] * self.alpha + (Q_u * Q_u) * (1- self.alpha)
-        Q_uu = Q_uu_raw.sqrt().add_(self.eps)
-        return Q_uu
 
             
 class AdamDDP(Optimizer):

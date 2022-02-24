@@ -52,7 +52,7 @@ class Step(nn.Module):
         big_k = -Q_ux
         term2 = torch.einsum('xy,zt->xt', big_k, (inp - self.x_old).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
             p.shape)
-        Q_u -= opt.lrddp*(term2 * Q_uu)
+        Q_u -= opt.lrddp*(term2)
         
         for p in self.mod.parameters():
             opt.update([p], [Q_u])

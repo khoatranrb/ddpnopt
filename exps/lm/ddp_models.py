@@ -44,7 +44,6 @@ class Step(nn.Module):
                 return self.forward_wo_train(inp, mask)
         for p in self.mod.parameters():
             Q_u = p.grad
-            Q_uu = opt.get_hess(p)
             break
         Q_x = self.x.grad.mean(dim=0).mean(dim=0)
         

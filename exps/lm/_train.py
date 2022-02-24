@@ -4,8 +4,10 @@ import torch
 import torch.nn as nn
 import math
 from _models import TransformerModel
+# from ddp_models import TransformerModel
 from _data import get_data
 from _utils import train, evaluate
+from ddp_opt import *
 
 train_data, val_data, test_data, vocab = get_data()
 

@@ -27,7 +27,7 @@ class RmsDDP(Optimizer):
             square_avg.mul_(self.alpha).addcmul_(grad, grad, value=1 - self.alpha)
 
             avg = square_avg.sqrt().add_(self.eps)
-
+            self.state[param]['hess'] = avg
             param.addcdiv_(grad, avg, value=-self.lr)
 
     @torch.no_grad()

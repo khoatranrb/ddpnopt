@@ -38,24 +38,18 @@ class Step(nn.Module):
 
     @torch.no_grad()
     def update(self, inp, mask, opt):
-        if opt.first_time:
-            for p in self.mod.parameters():
-                opt.state[p]['feedback'] = True
-                return self.forward_wo_train(inp, mask)
         for p in self.mod.parameters():
             Q_u = p.grad
+            Q_uu = opt.state[p]['hess']
             break
         Q_x = self.x.grad.mean(dim=0).mean(dim=0)
-        
         Q_ux = calc_q_ux_fc(Q_u, Q_x.unsqueeze(-1))
-#         big_k = calc_big_k_fc(Q_uu, Q_ux)
-        big_k = -Q_ux
+        big_k = calc_big_k_fc(Q_uu, Q_ux)
         term2 = torch.einsum('xy,zt->xt', big_k, (inp - self.x_old).mean(dim=0).mean(dim=0).unsqueeze(-1)).squeeze(-1).reshape(
             p.shape)
-        Q_u -= opt.lrddp*(term2)
-        
         for p in self.mod.parameters():
-            opt.update([p], [Q_u])
+            p.add_(opt.lr*opt.lrddp*(term2))
+            del opt.state[p]['hess']
             break
         out = self.forward_wo_train(inp, mask)
         del self.x

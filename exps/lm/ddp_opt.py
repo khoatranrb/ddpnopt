@@ -10,6 +10,7 @@ class RmsDDP(Optimizer):
         self.lrddp = lrddp
         self.model = model
         self.eps = eps
+        self.alpha = alpha
         defaults = dict(lr=lr, momentum=momentum, alpha=alpha, eps=eps, centered=centered, weight_decay=weight_decay)
         super(RmsDDP, self).__init__(model.parameters(), defaults)
 

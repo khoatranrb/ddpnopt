@@ -1,6 +1,7 @@
 import torch
 from tqdm.auto import tqdm
 from collections import namedtuple
+from ddp_models import Bottleneck
 
 def get_cfg(name):
     ResNetConfig = namedtuple('ResNetConfig', ['block', 'n_blocks', 'channels'])

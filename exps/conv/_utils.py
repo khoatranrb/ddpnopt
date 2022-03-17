@@ -50,8 +50,8 @@ def train(model, iterator, optimizer, criterion, device):
         loss.backward()
         
         optimizer.step()
-        with torch.no_grad():
-            model(x, update=True)
+#         with torch.no_grad():
+#             model(x, update=True)
         epoch_loss += loss.item()
         epoch_acc_1 += acc_1.item()
         epoch_acc_5 += acc_5.item()
